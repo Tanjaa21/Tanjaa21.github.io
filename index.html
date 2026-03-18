@@ -1,16 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Data Viz Site</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SF Crime Analysis</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(180deg, #0f172a, #111827);
+            color: #f9fafb;
+            line-height: 1.7;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a, #111827);
+            padding: 80px 20px 70px;
+            text-align: center;
+            border-bottom: 2px solid #14b8a6;
+        }
+
+        header h1 {
+            margin: 0 0 18px 0;
+            font-size: 3.2rem;
+            color: #ffffff;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 28px;
+            color: #2dd4bf;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: rgba(31, 41, 55, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #ffffff;
+        }
+
+        .card p {
+            color: #d1d5db;
+        }
+
+        .card a {
+            display: inline-block;
+            margin-top: 12px;
+            color: #2dd4bf;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        iframe {
+            width: 100%;
+            height: 550px;
+            border: none;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        .static-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #94a3b8;
+            border-top: 1px solid #334155;
+            margin-top: 50px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Hello World!</h1>
-    <p>This site will soon contain interactive data visualizations about crime in San Francisco.</p>
+
+    <header>
+        <h1>San Francisco Crime Analysis</h1>
+        <p>
+            This project explores crime patterns in San Francisco using data visualizations.
+            The goal is to understand how crime varies across time, category, and location.
+        </p>
+    </header>
+
+    <main>
+        <section>
+            <h2 class="section-title">Project Visualizations</h2>
+
+            <div class="card-grid">
+
+                <div class="card">
+                    <h3>Static Plot</h3>
+                    <p>A static visualization from earlier weeks showing trends in crime data.</p>
+                    <img src="images/plot.png" alt="Static crime plot" class="static-image">
+                </div>
+
+                <div class="card">
+                    <h3>Interactive Plotly Chart</h3>
+                    <p>Explore hourly crime patterns interactively. Hover and compare categories.</p>
+                    <iframe src="visualizations/crime_hourly.html"></iframe>
+                </div>
+
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Week 7 — Data Visualization Project</p>
+    </footer>
+
 </body>
 </html>
-
-<h2>Interactive Plotly Chart</h2>
-<iframe src="visualizations/crime_hourly.html" width="100%" height="600"></iframe>
-
-<h2>Static Plot</h2>
-<img src="images/plot.png" style="max-width:100%;">
