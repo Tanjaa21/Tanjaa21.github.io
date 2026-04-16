@@ -1,159 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SF Crime Analysis</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(180deg, #0f172a, #111827);
-            color: #f9fafb;
-            line-height: 1.7;
-        }
-
-        header {
-            background: linear-gradient(135deg, #0f172a, #111827);
-            padding: 80px 20px 70px;
-            text-align: center;
-            border-bottom: 2px solid #14b8a6;
-        }
-
-        header h1 {
-            margin: 0 0 18px 0;
-            font-size: 3.2rem;
-            color: #ffffff;
-            letter-spacing: -1px;
-        }
-
-        header p {
-            max-width: 700px;
-            margin: 0 auto;
-            color: #cbd5e1;
-            font-size: 1.1rem;
-        }
-
-        main {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-            margin-bottom: 28px;
-            color: #2dd4bf;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: rgba(31, 41, 55, 0.95);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: #ffffff;
-        }
-
-        .card p {
-            color: #d1d5db;
-        }
-
-        iframe {
-            width: 100%;
-            height: 550px;
-            border: none;
-            border-radius: 12px;
-            margin-top: 16px;
-        }
-
-        .static-image {
-            width: 100%;
-            border-radius: 12px;
-            margin-top: 16px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 20px;
-            color: #94a3b8;
-            border-top: 1px solid #334155;
-            margin-top: 50px;
-        }
-
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2.2rem;
-            }
-
-            header p {
-                font-size: 1rem;
-            }
-
-            iframe {
-                height: 420px;
-            }
-
-            main {
-                padding: 30px 16px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A citywide decline, but not a citywide experience</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <header class="hero">
+    <div class="container">
+      <p class="eyebrow">San Francisco Crime Data Story</p>
+      <h1>A citywide decline, but not a citywide experience</h1>
+      <p class="subtitle">
+        A short narrative about how citywide crime trends can hide neighborhood concentration.
+      </p>
+    </div>
+  </header>
 
-    <header>
-        <h1>San Francisco Crime Analysis</h1>
-        <p>
-            This project explores crime patterns in San Francisco using data visualizations.
-            The goal is to understand how crime varies across time, category, and location.
-        </p>
-    </header>
+  <main class="container story">
 
-    <main>
-        <section>
-            <h2 class="section-title">Project Visualizations</h2>
+    <section class="intro">
+      <p>
+        This page uses San Francisco police incident data from the city’s open data portal.
+        The dataset records reported incidents, which means it reflects what was recorded by
+        police rather than a perfect measure of underlying crime. That distinction matters:
+        a change in incident counts can reflect changes in behavior, reporting, or enforcement.
+      </p>
 
-            <div class="card-grid">
+      <p>
+        I focus here on one category of incidents and one simple question: does the citywide trend
+        describe what people experience in every neighborhood? The short answer is no. The total
+        may fall, but the geography can still stay highly uneven.
+      </p>
+    </section>
 
-                <div class="card">
-                    <h3>Static Plot</h3>
-                    <p>A static visualization from earlier weeks showing trends in crime data.</p>
-                    <img src="images/plot.png" alt="Static crime plot" class="static-image">
-                </div>
+    <section class="figure-block">
+      <h2>1. The citywide trend looks simple</h2>
+      <p>
+        The first figure shows the overall yearly pattern for the selected incident category across
+        San Francisco. At first glance, the story looks straightforward: the number of recorded
+        incidents declines over time.
+      </p>
 
-                <div class="card">
-                    <h3>Interactive Plotly Chart</h3>
-                    <p>Explore hourly crime patterns interactively. Hover and compare categories.</p>
-                    <iframe src="visualizations/crime_hourly.html"></iframe>
-                </div>
+      <figure>
+        <img
+          src="images/fig1_citywide_trend.png"
+          alt="Citywide yearly trend in reported incidents for the selected crime category in San Francisco."
+        />
+        <figcaption>
+          <strong>Figure 1.</strong> Citywide yearly incident counts for the selected category.
+          The total falls over time, which suggests improvement at the city level. But this view
+          compresses local differences into one line and hides where incidents remain concentrated.
+        </figcaption>
+      </figure>
 
-            </div>
-        </section>
-    </main>
+      <p>
+        That does not automatically mean the underlying behavior declined by the same amount.
+        Police incident data is shaped by reporting and enforcement as well as by what happens on
+        the ground. To understand who is still most affected, the next step is to look at place.
+      </p>
+    </section>
 
-    <footer>
-        <p>Week 7 — Data Visualization Project</p>
-    </footer>
+    <section class="figure-block">
+      <h2>2. The pattern is not evenly distributed across the city</h2>
+      <p>
+        A map makes the citywide average harder to trust on its own. Even when the total number
+        of incidents falls, the burden may remain concentrated in a smaller set of neighborhoods.
+      </p>
 
+      <figure>
+        <div class="iframe-wrap map-frame">
+          <iframe
+            src="embeds/fig2_map.html"
+            title="Neighborhood map of incidents in San Francisco"
+            loading="lazy">
+          </iframe>
+        </div>
+        <figcaption>
+          <strong>Figure 2.</strong> Neighborhood-level map of recorded incidents. The key pattern
+          is concentration: incidents are not spread evenly across San Francisco. A citywide decline
+          can coexist with persistent hotspots in a few areas.
+        </figcaption>
+      </figure>
+
+      <p>
+        This is the main point of the story. A city average can move in one direction while the
+        lived geography stays uneven. The map does not tell us why that happens by itself. It could
+        reflect differences in activity, foot traffic, land use, policing, or reporting intensity.
+      </p>
+    </section>
+
+    <section class="figure-block">
+      <h2>3. Comparing neighborhoods shows different local trajectories</h2>
+      <p>
+        The final figure lets the reader compare neighborhood trends directly. This is still the
+        same story, but now the differences are visible over time rather than only in one spatial
+        snapshot.
+      </p>
+
+      <figure>
+        <div class="iframe-wrap plot-frame">
+          <iframe
+            src="embeds/fig3_interactive.html"
+            title="Interactive Plotly neighborhood trends"
+            loading="lazy">
+          </iframe>
+        </div>
+        <figcaption>
+          <strong>Figure 3.</strong> Interactive neighborhood comparison of yearly incident counts.
+          Some areas follow the citywide decline more closely than others, while a few remain
+          persistently elevated. The overall trend is real, but it is not equally experienced.
+        </figcaption>
+      </figure>
+
+      <p>
+        Taken together, the three figures tell a more careful story than the citywide line alone.
+        The total count may improve, but the geography still matters. That is why summary numbers
+        should be treated as a starting point rather than the whole conclusion.
+      </p>
+    </section>
+
+    <section class="conclusion">
+      <h2>Conclusion</h2>
+      <p>
+        The main lesson from this data story is that citywide averages can hide neighborhood
+        concentration. Looking only at the total would make the change seem more uniform than it
+        really is. Once the data is broken out spatially, the pattern becomes more uneven.
+      </p>
+
+      <p>
+        At the same time, this dataset should be interpreted carefully. Recorded incident data is
+        not a complete measure of harm, and it should not be treated as a direct measure of criminal
+        behavior without considering reporting practices and enforcement. The value of visualization
+        here is not just to make the pattern visible, but to make its limits visible too.
+      </p>
+    </section>
+
+    <section class="references">
+      <h2>References</h2>
+      <ul>
+        <li>San Francisco Open Data portal, police incident data.</li>
+        <li>Segel, E. & Heer, J. (2010). Narrative Visualization: Telling Stories with Data.</li>
+        <li>Add any outside source you use to explain a spike, drop, or neighborhood pattern.</li>
+      </ul>
+    </section>
+
+  </main>
 </body>
 </html>
