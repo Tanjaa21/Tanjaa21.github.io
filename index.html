@@ -1,527 +1,956 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>What breaks a buying habit?</title>
-  <style>
-    :root {
-      --bg: #fffaf5;
-      --paper: #ffffff;
-      --text: #1d1d1f;
-      --muted: #6b6860;
-      --primary: #e85c2a;
-      --secondary: #a95aff;
-      --tertiary: #7bcad1;
-      --accent: #f2a900;
-      --border: #eadfd3;
-      --shadow: 0 10px 30px rgba(0,0,0,0.08);
-      --max: 1120px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Scout</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────── */
+:root {
+  --bg:#0b0d12; --s1:#13161f; --s2:#1a1e2a; --s3:#222636;
+  --border:#2c3148; --border2:#3a4160;
+  --green:#3dffa0; --yellow:#ffd166; --red:#ff6b6b; --blue:#7eb8ff;
+  --text:#dde3f4; --muted:#5e6a8a; --radius:14px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;display:flex;flex-direction:column;}
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
+/* ─── PANELS (swipe-style) ─────────────── */
+#app{flex:1;position:relative;overflow:hidden;}
+.panel{position:absolute;inset:0;display:flex;flex-direction:column;transition:transform .38s var(--ease),opacity .38s var(--ease);overflow:hidden;}
+.panel.hidden-right{transform:translateX(100%);opacity:0;pointer-events:none;}
+.panel.hidden-left{transform:translateX(-100%);opacity:0;pointer-events:none;}
+.panel.active{transform:none;opacity:1;}
 
-    a { color: inherit; text-decoration: none; }
-    img { max-width: 100%; display: block; border-radius: 18px; }
+/* ─── SCROLLABLE BODY ────────────────────── */
+.panel-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.panel-body::-webkit-scrollbar{width:4px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 
-    .container {
-      width: min(var(--max), calc(100% - 32px));
-      margin: 0 auto;
-    }
+/* ─── TOP BAR ────────────────────────────── */
+.topbar{display:flex;align-items:center;gap:.75rem;padding:.85rem 1.1rem;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;min-height:54px;}
+.topbar-back{width:34px;height:34px;border-radius:10px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:.9rem;flex-shrink:0;transition:background .15s,color .15s;}
+.topbar-back:hover{background:var(--s3);color:var(--text);}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;flex:1;}
+.topbar-badge{font-size:.72rem;background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:.2rem .6rem;color:var(--muted);white-space:nowrap;}
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(255,250,245,0.88);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(234,223,211,0.75);
-    }
+/* ─── PROGRESS BAR ───────────────────────── */
+.pbar-wrap{background:var(--s1);padding:.5rem 1.1rem .65rem;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pbar-row{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-bottom:.3rem;font-family:'Syne',sans-serif;letter-spacing:.05em;text-transform:uppercase;}
+.pbar{height:6px;background:var(--border);border-radius:6px;overflow:hidden;}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--green),#00d4ff);border-radius:6px;transition:width .6s var(--ease);}
 
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 0;
-      gap: 16px;
-    }
+/* ─── BUTTONS ────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:transform .14s,box-shadow .14s,background .14s;border-radius:50px;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--green);color:#0b0d12;font-size:.85rem;padding:.8rem 1.6rem;}
+.btn-primary:hover{box-shadow:0 6px 20px rgba(61,255,160,.28);transform:translateY(-1px);}
+.btn-secondary{background:var(--s3);color:var(--text);font-size:.8rem;padding:.7rem 1.3rem;border:1px solid var(--border2);}
+.btn-secondary:hover{background:var(--border2);}
+.btn-full{width:100%;}
 
-    .brand {
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
+/* ─── HOME ───────────────────────────────── */
+#p-home{background:radial-gradient(ellipse 80% 50% at 50% 20%,rgba(61,255,160,.1) 0%,transparent 65%),var(--bg);}
+.home-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2.5rem 1.5rem;min-height:100%;}
+.home-logo{font-family:'Syne',sans-serif;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--green);margin-bottom:1.5rem;border:1px solid rgba(61,255,160,.35);padding:.3rem .9rem;border-radius:50px;display:inline-block;}
+.home-title{font-family:'Syne',sans-serif;font-size:clamp(2.2rem,8vw,3.8rem);font-weight:800;line-height:1.0;letter-spacing:-.02em;margin-bottom:.5rem;}
+.home-title em{color:var(--green);font-style:normal;}
+.home-sub{color:var(--muted);font-size:.92rem;margin-bottom:2rem;max-width:320px;}
+.home-chips{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin-bottom:2.2rem;}
+.chip{font-size:.7rem;background:var(--s2);border:1px solid var(--border);border-radius:50px;padding:.25rem .7rem;color:var(--muted);}
+.home-btns{display:flex;flex-direction:column;gap:.7rem;width:100%;max-width:280px;}
 
-    .nav-links {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+/* ─── SCENARIO MAP ───────────────────────── */
+.map-header{padding:1.2rem 1.1rem .6rem;}
+.map-label{font-family:'Syne',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:.3rem;}
+.map-title{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:.2rem;}
+.map-sub{font-size:.8rem;color:var(--muted);}
+.sc-list{padding:.2rem 1.1rem 1.5rem;display:flex;flex-direction:column;gap:.75rem;}
+.sc-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.2rem;cursor:pointer;transition:border-color .18s,transform .15s;display:flex;align-items:center;gap:1rem;position:relative;overflow:hidden;}
+.sc-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(61,255,160,.04),transparent);opacity:0;transition:opacity .2s;}
+.sc-card:hover{border-color:var(--green);transform:translateY(-1px);}
+.sc-card:hover::before{opacity:1;}
+.sc-card.locked{opacity:.45;cursor:default;}
+.sc-card.done{border-color:rgba(61,255,160,.3);}
+.sc-emoji{font-size:2.2rem;flex-shrink:0;}
+.sc-body{flex:1;}
+.sc-name{font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;margin-bottom:.15rem;}
+.sc-desc{font-size:.77rem;color:var(--muted);line-height:1.4;}
+.sc-tag{font-size:.68rem;padding:.2rem .55rem;border-radius:6px;font-family:'Syne',sans-serif;white-space:nowrap;align-self:flex-start;margin-top:.1rem;}
+.sc-tag.open{background:rgba(61,255,160,.12);color:var(--green);border:1px solid rgba(61,255,160,.25);}
+.sc-tag.done{background:rgba(61,255,160,.08);color:var(--green);border:1px solid rgba(61,255,160,.2);}
+.sc-tag.locked{background:var(--s3);color:var(--muted);border:1px solid var(--border);}
 
-    .hero {
-      padding: 72px 0 40px;
-    }
+/* ─── STAKEHOLDER SELECT ─────────────────── */
+.scenario-brief{background:var(--s2);border-bottom:1px solid var(--border);padding:1rem 1.1rem;}
+.brief-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;margin-bottom:.3rem;}
+.brief-text{font-size:.8rem;color:var(--muted);line-height:1.45;}
+.brief-goal{display:inline-flex;align-items:center;gap:.35rem;margin-top:.6rem;font-size:.72rem;background:rgba(61,255,160,.1);color:var(--green);border:1px solid rgba(61,255,160,.25);border-radius:6px;padding:.25rem .65rem;}
+.npc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;padding:1rem 1.1rem;}
+.npc-card{background:var(--s1);border:2px solid var(--border);border-radius:var(--radius);padding:1rem;cursor:pointer;transition:border-color .18s,transform .15s,background .18s;position:relative;text-align:center;}
+.npc-card:hover{border-color:var(--green);transform:translateY(-2px);background:var(--s2);}
+.npc-card.done{border-color:rgba(61,255,160,.4);background:rgba(61,255,160,.04);cursor:pointer;}
+.npc-card.done:hover{border-color:var(--green);}
+.npc-card.locked{opacity:.4;cursor:not-allowed;border-style:dashed;}
+.npc-card.locked:hover{transform:none;border-color:var(--border);}
+.npc-emoji{font-size:2rem;margin-bottom:.45rem;}
+.npc-name{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:.15rem;}
+.npc-role{font-size:.7rem;color:var(--muted);}
+.npc-tag{position:absolute;top:.5rem;right:.5rem;font-size:.6rem;padding:.15rem .4rem;border-radius:5px;}
+.npc-tag.done{background:rgba(61,255,160,.2);color:var(--green);}
+.npc-tag.locked{background:var(--s3);color:var(--muted);}
+.npc-coming{font-size:.62rem;color:var(--muted);margin-top:.2rem;font-style:italic;}
+.choose-footer{padding:.8rem 1.1rem 1.2rem;border-top:1px solid var(--border);background:var(--s1);}
+.choose-tip{font-size:.75rem;color:var(--muted);margin-bottom:.7rem;line-height:1.4;}
 
-    .eyebrow {
-      display: inline-block;
-      padding: 8px 12px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--primary);
-      font-weight: 700;
-      font-size: 0.88rem;
-    }
+/* ─── DIALOGUE ───────────────────────────── */
+.npc-header{display:flex;align-items:center;gap:.8rem;padding:.85rem 1.1rem;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.npc-avatar{width:44px;height:44px;border-radius:50%;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.npc-hinfo{flex:1;}
+.npc-hname{font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;}
+.npc-hrole{font-size:.72rem;color:var(--muted);}
+.mood-pill{font-size:.7rem;padding:.22rem .65rem;border-radius:50px;flex-shrink:0;border:1px solid;}
+.mood-pill.warm{background:rgba(255,209,102,.1);color:var(--yellow);border-color:rgba(255,209,102,.3);}
+.mood-pill.cold{background:rgba(255,107,107,.1);color:var(--red);border-color:rgba(255,107,107,.3);}
+.mood-pill.neutral{background:var(--s3);color:var(--muted);border-color:var(--border);}
+.turn-pip-row{display:flex;gap:.35rem;align-items:center;padding:.5rem 1.1rem;background:var(--s2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.turn-pip{width:28px;height:4px;border-radius:4px;background:var(--border);transition:background .3s;}
+.turn-pip.done{background:var(--green);}
+.turn-pip.active{background:var(--blue);}
+.turn-label{margin-left:auto;font-size:.68rem;color:var(--muted);font-family:'Syne',sans-serif;}
 
-    .hero-grid {
-      margin-top: 24px;
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 28px;
-      align-items: start;
-    }
+.chat{flex:1;overflow-y:auto;padding:.9rem 1.1rem;display:flex;flex-direction:column;gap:.7rem;}
+.chat::-webkit-scrollbar{width:3px;}
+.chat::-webkit-scrollbar-thumb{background:var(--border2);}
+.bub{max-width:82%;border-radius:14px;padding:.75rem .95rem;font-size:.85rem;line-height:1.55;animation:popIn .25s var(--ease) both;}
+@keyframes popIn{from{opacity:0;transform:translateY(8px) scale(.97);}to{opacity:1;transform:none;}}
+.bub-npc{background:var(--s2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px;}
+.bub-player{background:rgba(61,255,160,.1);border:1px solid rgba(61,255,160,.22);align-self:flex-end;border-bottom-right-radius:3px;}
+.bub-reflect{background:rgba(126,184,255,.07);border:1px solid rgba(126,184,255,.18);align-self:stretch;max-width:100%;font-size:.78rem;color:#a8c8ff;border-radius:10px;display:flex;gap:.55rem;align-items:flex-start;}
+.bub-reflect .ri{flex-shrink:0;font-size:1rem;margin-top:.05rem;}
+.bub-sender{font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem;font-family:'Syne',sans-serif;}
+.bub-npc .bub-sender{color:var(--yellow);}
+.bub-player .bub-sender{color:var(--green);}
 
-    h1 {
-      margin: 12px 0 14px;
-      font-size: clamp(2.4rem, 5vw, 4.6rem);
-      line-height: 1.03;
-      letter-spacing: -0.04em;
-    }
+.choices-panel{border-top:1px solid var(--border);background:var(--s1);flex-shrink:0;}
+.choices-header{display:flex;align-items:center;justify-content:space-between;padding:.65rem 1.1rem .3rem;}
+.choices-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:'Syne',sans-serif;}
+.hint-btn{font-size:.7rem;color:var(--blue);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;}
+.hint-btn:hover{text-decoration:underline;}
+.choices-list{padding:.3rem .8rem .85rem;display:flex;flex-direction:column;gap:.45rem;}
+.c-btn{background:var(--s2);border:1.5px solid var(--border);border-radius:11px;padding:.7rem .9rem;text-align:left;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.83rem;transition:border-color .15s,background .15s,transform .1s;display:flex;gap:.65rem;align-items:flex-start;}
+.c-btn:hover{border-color:var(--blue);background:rgba(126,184,255,.05);transform:translateX(3px);}
+.c-btn:active{transform:scale(.99);}
+.c-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.c-arrow{color:var(--muted);flex-shrink:0;margin-top:.1rem;font-size:.8rem;transition:color .15s;}
+.c-btn:hover .c-arrow{color:var(--blue);}
+.c-text{flex:1;}
+.c-hint{display:none;font-size:.67rem;font-style:italic;margin-top:.22rem;}
+.hints-on .c-hint{display:block;}
+.c-hint.good{color:var(--green);}
+.c-hint.ok{color:var(--yellow);}
+.c-hint.weak{color:var(--red);}
 
-    .lead {
-      font-size: 1.1rem;
-      color: var(--muted);
-      max-width: 68ch;
-    }
+/* ─── FEEDBACK SCREEN ────────────────────── */
+.fb-hero{text-align:center;padding:1.5rem 1.1rem 1rem;border-bottom:1px solid var(--border);}
+.score-ring{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;}
+.score-ring.good{background:rgba(61,255,160,.12);border:3px solid var(--green);color:var(--green);}
+.score-ring.ok{background:rgba(255,209,102,.1);border:3px solid var(--yellow);color:var(--yellow);}
+.score-ring.bad{background:rgba(255,107,107,.1);border:3px solid var(--red);color:var(--red);}
+.fb-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:.25rem;}
+.fb-sub{font-size:.82rem;color:var(--muted);}
+.fb-section{padding:.9rem 1.1rem;border-bottom:1px solid var(--border);}
+.fb-section-label{font-family:'Syne',sans-serif;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;}
+.thought-card{background:rgba(126,184,255,.06);border:1px solid rgba(126,184,255,.18);border-radius:10px;padding:.85rem 1rem;font-size:.8rem;color:#a8c8ff;line-height:1.55;}
+.thought-card strong{color:var(--text);}
+.insight-row{display:flex;gap:.75rem;align-items:flex-start;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:.75rem .9rem;margin-bottom:.45rem;font-size:.8rem;}
+.insight-row .iq{font-size:1rem;flex-shrink:0;margin-top:.05rem;}
+.insight-row strong{display:block;font-size:.78rem;font-family:'Syne',sans-serif;margin-bottom:.1rem;}
+.insight-row span{color:var(--muted);font-size:.74rem;}
+.missed-card{background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.18);border-radius:10px;padding:.8rem 1rem;font-size:.78rem;}
+.missed-card h4{font-family:'Syne',sans-serif;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:.45rem;}
+.missed-card li{color:var(--muted);margin-bottom:.3rem;padding-left:.3rem;}
+.skill-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.55rem;}
+.skill-nm{font-size:.76rem;color:var(--muted);width:130px;flex-shrink:0;}
+.sbar{flex:1;height:5px;background:var(--border);border-radius:4px;overflow:hidden;}
+.sbar-fill{height:100%;border-radius:4px;transition:width 1.1s var(--ease);}
+.sbar-fill.s1{background:var(--green);}
+.sbar-fill.s2{background:#00d4ff;}
+.sbar-fill.s3{background:var(--yellow);}
+.sbar-fill.s4{background:var(--red);}
+.skill-val{font-size:.72rem;color:var(--muted);width:28px;text-align:right;}
+.fb-actions{padding:.9rem 1.1rem;display:flex;gap:.6rem;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0;}
+.fb-actions .btn{flex:1;}
 
-    .card {
-      background: var(--paper);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-    }
+/* ─── RESULTS ────────────────────────────── */
+.results-hero{text-align:center;padding:2rem 1.5rem 1.2rem;border-bottom:1px solid var(--border);}
+.results-trophy{font-size:3.5rem;margin-bottom:.7rem;}
+.results-title{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.3rem;}
+.results-title em{color:var(--green);font-style:normal;}
+.results-sub{font-size:.83rem;color:var(--muted);}
+.results-stats{display:flex;padding:1.1rem;gap:.6rem;border-bottom:1px solid var(--border);}
+.rstat{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:.85rem;text-align:center;}
+.rstat .rv{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;color:var(--green);}
+.rstat .rl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:.1rem;}
+.results-btns{padding:1.1rem;display:flex;flex-direction:column;gap:.6rem;}
 
-    .summary-card {
-      padding: 22px;
-    }
+/* ─── OVERVIEW ───────────────────────────── */
+.ov-body{padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.75rem;}
+.ov-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem;}
+.ov-card h3{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;margin-bottom:.45rem;display:flex;align-items:center;gap:.5rem;}
+.ov-tag{background:rgba(61,255,160,.12);color:var(--green);font-size:.63rem;padding:.15rem .5rem;border-radius:50px;}
+.ov-card p,.ov-card ul{font-size:.8rem;color:var(--muted);line-height:1.55;}
+.ov-card ul{padding-left:1rem;}
+.ov-card li{margin-bottom:.25rem;}
 
-    .summary-card h3 {
-      margin: 0 0 8px;
-      font-size: 1rem;
-    }
-
-    .summary-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.96rem;
-    }
-
-    .kpis {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .kpi {
-      background: #fff9f2;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px;
-    }
-
-    .kpi .value {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-    }
-
-    .kpi .label {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .section {
-      padding: 32px 0;
-    }
-
-    .section-header {
-      margin-bottom: 20px;
-    }
-
-    .section-header h2 {
-      margin: 0 0 8px;
-      font-size: clamp(1.6rem, 3vw, 2.3rem);
-      letter-spacing: -0.03em;
-    }
-
-    .section-header p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 70ch;
-    }
-
-    .findings {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .finding {
-      padding: 22px;
-    }
-
-    .finding .number {
-      width: 38px;
-      height: 38px;
-      display: inline-grid;
-      place-items: center;
-      border-radius: 50%;
-      font-weight: 800;
-      color: white;
-      margin-bottom: 12px;
-    }
-
-    .finding:nth-child(1) .number { background: var(--primary); }
-    .finding:nth-child(2) .number { background: var(--secondary); }
-    .finding:nth-child(3) .number { background: var(--tertiary); color: var(--text); }
-
-    .finding h3 { margin: 0 0 8px; }
-    .finding p { margin: 0; color: var(--muted); }
-
-    .viz-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-
-    .viz-card {
-      overflow: hidden;
-    }
-
-    .viz-card .copy {
-      padding: 18px 18px 6px;
-    }
-
-    .viz-card h3 {
-      margin: 0 0 6px;
-      font-size: 1.08rem;
-    }
-
-    .viz-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.96rem;
-    }
-
-    .viz-frame {
-      padding: 18px;
-    }
-
-    .viz-placeholder {
-      min-height: 260px;
-      border: 2px dashed var(--border);
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: var(--muted);
-      background: linear-gradient(180deg, #fff, #fff9f2);
-      padding: 24px;
-    }
-
-    .story {
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .quote {
-      padding: 26px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      border-left: 6px solid var(--primary);
-    }
-
-    .body-card {
-      padding: 24px;
-    }
-
-    .body-card p:first-child { margin-top: 0; }
-    .body-card p:last-child { margin-bottom: 0; }
-    .body-card p { color: var(--muted); }
-
-    .cta {
-      padding: 26px;
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin: 24px 0 52px;
-      background: linear-gradient(135deg, #fff, #fff4ea);
-    }
-
-    .cta h3 {
-      margin: 0 0 6px;
-      font-size: 1.25rem;
-    }
-
-    .cta p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .button {
-      display: inline-block;
-      padding: 12px 16px;
-      border-radius: 999px;
-      background: var(--primary);
-      color: white;
-      font-weight: 700;
-    }
-
-    footer {
-      padding: 0 0 56px;
-      color: var(--muted);
-      font-size: 0.94rem;
-    }
-
-    .small {
-      font-size: 0.9rem;
-      color: var(--muted);
-    }
-
-    code.inline {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2px 7px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.92em;
-    }
-
-    @media (max-width: 900px) {
-      .hero-grid,
-      .findings,
-      .viz-grid,
-      .story {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+/* ─── TOASTS ─────────────────────────────── */
+#toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:1px solid var(--border2);border-radius:50px;padding:.55rem 1.2rem;font-size:.8rem;color:var(--text);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:100;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="container nav">
-      <div class="brand">Buying Habit — Retail Story</div>
-      <nav class="nav-links">
-        <a href="#question">Question</a>
-        <a href="#findings">Findings</a>
-        <a href="#charts">Charts</a>
-        <a href="#discussion">Discussion</a>
-      </nav>
+<div id="app">
+
+<!-- ══════════════ HOME ══════════════ -->
+<div class="panel active" id="p-home">
+  <div class="panel-body">
+    <div class="home-inner">
+      <div class="home-logo">🎓 Edu-Game Prototype</div>
+      <h1 class="home-title">Market<br><em>Scout</em></h1>
+      <p class="home-sub">Master customer discovery through real conversations. Ask the right questions. Uncover hidden needs.</p>
+      <div class="home-chips">
+        <span class="chip">Core Loop</span><span class="chip">Learning Alignment</span>
+        <span class="chip">Feedback System</span><span class="chip">Win Conditions</span>
+      </div>
+      <div class="home-btns">
+        <button class="btn btn-primary btn-full" onclick="goTo('p-map')">▶ &nbsp;Start Playing</button>
+        <button class="btn btn-secondary btn-full" onclick="goTo('p-overview')">📋 &nbsp;How It Works</button>
+      </div>
+      <p style="margin-top:1.2rem;font-size:.72rem;color:var(--muted);">5–10 min · 2 scenarios · no dead ends</p>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main>
-    <section class="hero" id="question">
-      <div class="container hero-grid">
-        <div>
-          <span class="eyebrow">Explainer website</span>
-          <h1>What breaks a buying habit?</h1>
-          <p class="lead">
-            An exploratory analysis of a 2019 online-shopping dataset. We tested whether buying habits fade with tenure,
-            whether coupons actually change basket size, and whether distinct customer types emerge from the data.
-          </p>
-          <p class="small">
-            Authors: Tanja Kristín · Ýlfa Margrét<br>
-            Course: DTU 02806 — Social Data Analysis and Visualization
-          </p>
-        </div>
-
-        <aside class="card summary-card">
-          <h3>Headline numbers</h3>
-          <p>
-            2019 saw 52,924 transactions from 1,468 customers across 5 US cities and 21 product categories.
-          </p>
-          <div class="kpis">
-            <div class="kpi">
-              <div class="value">52,924</div>
-              <div class="label">transactions</div>
-            </div>
-            <div class="kpi">
-              <div class="value">1,468</div>
-              <div class="label">customers</div>
-            </div>
-            <div class="kpi">
-              <div class="value">$4.67M</div>
-              <div class="label">gross revenue</div>
-            </div>
-            <div class="kpi">
-              <div class="value">6.7%</div>
-              <div class="label">discount share</div>
-            </div>
-          </div>
-        </aside>
+<!-- ══════════════ OVERVIEW ══════════════ -->
+<div class="panel hidden-right" id="p-overview">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack()">←</div>
+    <div class="topbar-title">How It Works</div>
+  </div>
+  <div class="panel-body">
+    <div class="ov-body">
+      <div class="ov-card">
+        <h3>🔄 Core Loop <span class="ov-tag">Mechanic</span></h3>
+        <ul><li>Read your startup brief</li><li>Pick a stakeholder to interview</li><li>Navigate 4 dialogue turns — ask, listen, adapt</li><li>Collect market insights & earn a quality score</li><li>Complete both scenarios to finish</li></ul>
       </div>
-    </section>
-
-    <section class="section" id="findings">
-      <div class="container">
-        <div class="section-header">
-          <h2>The three main findings</h2>
-          <p>
-            The notebook followed three pillars: transaction timing, spending behaviour, and customer segmentation.
-            These became the backbone of the website story.
-          </p>
-        </div>
-
-        <div class="findings">
-          <article class="card finding">
-            <div class="number">1</div>
-            <h3>Tenure did not explain habit decay</h3>
-            <p>
-              Activation rate stayed roughly flat across tenure buckets. The expected drop-off with customer age did not appear in the data.
-            </p>
-          </article>
-
-          <article class="card finding">
-            <div class="number">2</div>
-            <h3>Coupons mattered more than tenure</h3>
-            <p>
-              Basket size rose slightly when coupons were actually used, but deeper discounts did not keep increasing the effect.
-            </p>
-          </article>
-
-          <article class="card finding">
-            <div class="number">3</div>
-            <h3>Customers split into clear spending tribes</h3>
-            <p>
-              Low, medium, and high spenders behaved differently enough to support a segmentation story rather than a single average customer.
-            </p>
-          </article>
-        </div>
+      <div class="ov-card">
+        <h3>📚 Learning Alignment <span class="ov-tag">Pedagogy</span></h3>
+        <p>Choosing a stakeholder = stakeholder mapping. Dialogue choices = questioning strategy. NPC mood shifts = active listening signals. The game loop <em>is</em> the learning process.</p>
       </div>
-    </section>
-
-    <section class="section" id="charts">
-      <div class="container">
-        <div class="section-header">
-          <h2>Charts and narrative blocks</h2>
-          <p>
-            Replace the placeholders below with exported chart images from your notebook, or later swap them with interactive charts.
-          </p>
-        </div>
-
-        <div class="viz-grid">
-          <article class="card viz-card">
-            <div class="copy">
-              <h3>Figure 1 — Fundamental distributions</h3>
-              <p>Monthly traffic, city mix, top categories, and customer spend distribution.</p>
-            </div>
-            <div class="viz-frame">
-              <div class="viz-placeholder">
-                Add your exported image here<br>
-                <span class="small">Example file: <code class="inline">images/fundamental-distributions.png</code></span>
-              </div>
-            </div>
-          </article>
-
-          <article class="card viz-card">
-            <div class="copy">
-              <h3>Figure 2 — Hypothesis vs observed tenure curve</h3>
-              <p>The key reveal: observed activation rate stays almost flat instead of falling sharply.</p>
-            </div>
-            <div class="viz-frame">
-              <div class="viz-placeholder">
-                Add your exported image here<br>
-                <span class="small">Example file: <code class="inline">images/tenure-curve.png</code></span>
-              </div>
-            </div>
-          </article>
-
-          <article class="card viz-card">
-            <div class="copy">
-              <h3>Figure 3 — Coupon × discount heatmap</h3>
-              <p>Used coupons show modest lift, but stronger discounts do not keep adding much.</p>
-            </div>
-            <div class="viz-frame">
-              <div class="viz-placeholder">
-                Add your exported image here<br>
-                <span class="small">Example file: <code class="inline">images/coupon-heatmap.png</code></span>
-              </div>
-            </div>
-          </article>
-
-          <article class="card viz-card">
-            <div class="copy">
-              <h3>Figure 4 — Segmentation overview</h3>
-              <p>Low, medium, and high spenders differ in spending and engagement, not just size.</p>
-            </div>
-            <div class="viz-frame">
-              <div class="viz-placeholder">
-                Add your exported image here<br>
-                <span class="small">Example file: <code class="inline">images/segments.png</code></span>
-              </div>
-            </div>
-          </article>
-        </div>
+      <div class="ov-card">
+        <h3>🎯 Objective <span class="ov-tag">Goals</span></h3>
+        <ul><li>Discover customer needs & pain points</li><li>Build communication & negotiation skills</li><li>Fill the insight matrix as fully as possible</li><li>You can advance at any time — no hard blocks</li></ul>
       </div>
-    </section>
-
-    <section class="section" id="discussion">
-      <div class="container story">
-        <aside class="card quote">
-          “The surprising result was not that discounts work a little. It was that tenure barely explained behaviour at all.”
-        </aside>
-
-        <article class="card body-card">
-          <p>
-            The notebook’s strongest narrative move is the reversal of the original hypothesis. The website should keep that structure.
-            Start with the expectation that older customers buy less often, then show the observed curve and explain why the pattern does not appear.
-          </p>
-          <p>
-            After that reveal, move the reader into the stronger signal: coupon behaviour. The heatmap and funnel can carry the middle of the story,
-            because they are visually intuitive and easy to explain without much statistical background.
-          </p>
-          <p>
-            End with segmentation and a compact conclusion: habit did not break because of tenure alone, but behaviour still differs meaningfully
-            across customer types and marketing responses.
-          </p>
-        </article>
+      <div class="ov-card">
+        <h3>💬 Feedback <span class="ov-tag">Immediate & Cumulative</span></h3>
+        <ul><li><strong>Inline:</strong> 💭 Reflection after every choice explaining why it worked</li><li><strong>Post-meeting:</strong> Score, insight summary, missed opportunities</li><li><strong>Skill tracker:</strong> Listening, Questioning, Empathy, Adaptability</li></ul>
       </div>
-    </section>
-
-    <section class="section">
-      <div class="container card cta">
-        <div>
-          <h3>How to turn this into a real site</h3>
-          <p>
-            Save this file as <code class="inline">index.html</code>, put your chart images in an <code class="inline">images</code> folder,
-            and open the file in your browser.
-          </p>
-        </div>
-        <a class="button" href="#charts">Add charts</a>
+      <div class="ov-card">
+        <h3>🏆 Win Conditions <span class="ov-tag">Completion</span></h3>
+        <p>Win by gathering high-quality insights through good questioning. Incomplete or failed meetings still count — learning from failure is intentional, not a punishment.</p>
       </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container">
-      Based on the explainer notebook “What breaks a buying habit?” You can later add JavaScript filters for city, category, and coupon usage.
+      <button class="btn btn-primary btn-full" onclick="goTo('p-map')" style="margin-top:.3rem;">▶ &nbsp;Start Playing</button>
     </div>
-  </footer>
+  </div>
+</div>
+
+<!-- ══════════════ SCENARIO MAP ══════════════ -->
+<div class="panel hidden-right" id="p-map">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack()">←</div>
+    <div class="topbar-title">Choose Scenario</div>
+    <div class="topbar-badge" id="map-insight-badge">0 insights</div>
+  </div>
+  <div class="panel-body">
+    <div class="map-header">
+      <div class="map-label">Mission Select</div>
+      <div class="map-title">Pick your startup world</div>
+      <div class="map-sub">Each scenario is a different company. Interview stakeholders to gather insights.</div>
+    </div>
+    <div class="sc-list" id="sc-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════ STAKEHOLDER SELECT ══════════════ -->
+<div class="panel hidden-right" id="p-choose">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack()">←</div>
+    <div class="topbar-title" id="choose-title">Interviews</div>
+    <div class="topbar-badge" id="choose-badge">0/0</div>
+  </div>
+  <div class="pbar-wrap">
+    <div class="pbar-row"><span id="pbar-label">Insight Progress</span><span id="pbar-pct">0%</span></div>
+    <div class="pbar"><div class="pbar-fill" id="pbar-fill" style="width:0%"></div></div>
+  </div>
+  <div class="panel-body">
+    <div class="scenario-brief" id="sc-brief"></div>
+    <div style="padding:.75rem 1.1rem .2rem;">
+      <div style="font-family:'Syne',sans-serif;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;">Who do you want to talk to?</div>
+    </div>
+    <div class="npc-grid" id="npc-grid"></div>
+    <div class="choose-footer">
+      <div class="choose-tip">💡 Interview whoever you like — all characters are available. Locked characters will be unlocked in a future version.</div>
+      <button class="btn btn-secondary btn-full" onclick="goToResults()">See My Results So Far →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DIALOGUE ══════════════ -->
+<div class="panel hidden-right" id="p-dialogue">
+  <div class="npc-header">
+    <div class="npc-avatar" id="npc-av">🙂</div>
+    <div class="npc-hinfo">
+      <div class="npc-hname" id="npc-nm">—</div>
+      <div class="npc-hrole" id="npc-rl">—</div>
+    </div>
+    <div class="mood-pill neutral" id="mood-pill">🤝 Neutral</div>
+  </div>
+  <div class="turn-pip-row" id="pip-row"></div>
+  <div class="chat" id="chat"></div>
+  <div class="choices-panel">
+    <div class="choices-header">
+      <span class="choices-label">Your Response</span>
+      <button class="hint-btn" id="hint-btn" onclick="toggleHints()">💡 Show hints</button>
+    </div>
+    <div class="choices-list" id="choices-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════ FEEDBACK ══════════════ -->
+<div class="panel hidden-right" id="p-feedback">
+  <div class="topbar">
+    <div class="topbar-back" onclick="goBack()">←</div>
+    <div class="topbar-title">Meeting Feedback</div>
+  </div>
+  <div class="panel-body" id="fb-body"></div>
+  <div class="fb-actions">
+    <button class="btn btn-secondary" onclick="goBack()">← More Interviews</button>
+    <button class="btn btn-primary" onclick="goToResults()">Results 🏆</button>
+  </div>
+</div>
+
+<!-- ══════════════ RESULTS ══════════════ -->
+<div class="panel hidden-right" id="p-results">
+  <div class="panel-body" id="results-body"></div>
+</div>
+
+</div><!-- /app -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
+const SCENARIOS = [
+  {
+    id:'eco', icon:'🚲', name:'EcoDeliver', tag:'Sustainable Logistics',
+    desc:'Replace fossil-fuel delivery vans with electric cargo bikes in urban areas. Understand customer needs, city rules, and business viability.',
+    goal:8,
+    npcs:[
+      { id:'shopper', emoji:'🛍️', name:'Urban Shopper', role:'End Customer', coming:false,
+        mood:'warm',
+        open:"Hi! Yeah I order online constantly. The delivery windows are so annoying — I never know when they'll show up.",
+        turns:[
+          { q:"To be honest, half the time I end up missing the delivery and have to rearrange. It's a real headache.",
+            choices:[
+              { t:"What are your top three frustrations with current delivery services?", q:'good', why:"Open-ended questions let the customer reveal priorities you wouldn't have guessed. You're letting them shape the conversation.", r:"Time windows, damaged packaging, and honestly the carbon guilt — I feel bad when a van comes for just one parcel.", ins:"Top pains: time uncertainty, packaging damage, eco-guilt", mood:'warm' },
+              { t:"Would you pay more for eco-friendly delivery?", q:'ok', why:"Jumping to price too early can make customers defensive. You skipped learning *why* they'd pay more.", r:"Maybe — but I mainly just want it on time. Price is secondary.", ins:"Reliability > price for end customers", mood:'warm' },
+              { t:"We actually solve all those problems — want to hear more?", q:'weak', why:"Pitching before understanding the customer signals you're not really listening.", r:"…I didn't come here to be sold something.", mood:'cold' }
+            ]
+          },
+          { q:"I'd love a service with a live map — like Uber but for parcels. Do any delivery companies do that?",
+            choices:[
+              { t:"How often do you receive deliveries per week, and when do you prefer them?", q:'good', why:"Frequency and timing data is crucial for route planning and business modelling. Combining two related questions is efficient.", r:"4–5 orders a week. I work from home so afternoons 4–7pm are best. I'd subscribe to a reliable service.", ins:"High-frequency user; 4–7pm window; open to subscription", mood:'warm' },
+              { t:"Have you ever used a premium delivery subscription?", q:'ok', why:"Good probe on habits, but slightly narrow. You're on the right track.", r:"I tried one but cancelled — not reliable enough to justify the cost.", ins:"Past failed subscription = reliability is the key blocker", mood:'warm' },
+              { t:"Tell me more about the GPS idea.", q:'ok', why:"Exploring a feature shows curiosity, but risks a product rabbit hole instead of understanding the broader need.", r:"Just like Uber tracking — I want to know it's 10 minutes away so I can go downstairs.", mood:'warm' }
+            ]
+          },
+          { q:"I also care a lot about sustainability. I've started avoiding some shops because of packaging waste.",
+            choices:[
+              { t:"What would make you choose a greener delivery option over a faster one?", q:'good', why:"This trade-off question surfaces real priorities. Customers often say eco but choose speed — finding the switch point is gold.", r:"If it's just one extra day and similar price? I'd choose green every time. But not 3+ days extra.", ins:"Eco choice viable if <1 day slower and similar price", mood:'warm' },
+              { t:"Do you look at a company's sustainability rating before ordering?", q:'ok', why:"Valid probe, but it's a yes/no question. You'll get a short answer instead of a story.", r:"Sometimes, yeah. Mostly for clothing.", mood:'warm' },
+              { t:"Great — we use 100% electric bikes, so we're very green.", q:'weak', why:"Pivoting back to a pitch breaks trust. The customer was opening up.", r:"Okay… I was asking about my own choices, not your company.", mood:'cold' }
+            ]
+          },
+          { q:"Do you have any concerns about cargo bike delivery that would stop you using it?",
+            choices:[
+              { t:"What specific concerns do you have? I want to understand any blockers.", q:'good', why:"Explicitly inviting objections is mature customer discovery. Hearing them early saves enormous time.", r:"Can a bike carry a full IKEA box? And weather — will it run in the rain?", ins:"Key objections: cargo capacity and weather reliability", mood:'warm' },
+              { t:"We can handle most parcel sizes, don't worry.", q:'weak', why:"Dismissing concerns without exploring them loses valuable data.", r:"I wasn't asking for reassurance — I wanted to share my concern.", mood:'cold' },
+              { t:"Is there anything else that would affect your decision?", q:'ok', why:"Better than dismissing, but naming the specific topic gets more useful answers.", r:"Price transparency upfront would help. I hate surprise fees.", ins:"Price transparency is important to end customers", mood:'warm' }
+            ]
+          }
+        ]
+      },
+      { id:'retailer', emoji:'🏪', name:'Local Retailer', role:'B2B Customer', coming:false,
+        mood:'neutral',
+        open:"We do about 30 deliveries a day. Current courier costs are eating into our margins — what've you got?",
+        turns:[
+          { q:"Our main pain is unpredictability. Sometimes parcels arrive two days late. It costs us customer relationships.",
+            choices:[
+              { t:"What would guaranteed same-day delivery be worth to you per parcel?", q:'good', why:"Quantifying willingness to pay early in B2B is smart. Retailers think in unit economics.", r:"Up to €2.50 extra per parcel if it's reliable. Late delivery costs far more in lost customers.", ins:"B2B WTP: €2.50 premium for reliability", mood:'warm' },
+              { t:"How many parcels daily, and what's the average delivery radius?", q:'good', why:"Volume and geography are the two core variables for route optimisation.", r:"About 30 parcels, mostly within a 5km radius.", ins:"~30 daily parcels within 5km radius", mood:'warm' },
+              { t:"Our bikes are fully electric — that's a great selling point, right?", q:'weak', why:"Retailers care about cost and reliability, not vehicle type. Leading with features you're proud of instead of their priorities is a common mistake.", r:"I'm more interested in cost and reliability. The vehicle doesn't matter to me.", mood:'cold' }
+            ]
+          },
+          { q:"We also do a lot of B2B deliveries to local restaurants and offices. Very time-sensitive.",
+            choices:[
+              { t:"What does 'time-sensitive' mean for your B2B customers — what's the tolerance for lateness?", q:'good', why:"'Time-sensitive' means different things to different businesses. Clarifying precisely helps you design SLAs accurately.", r:"Restaurants need it within two hours or they'll go elsewhere. Offices are more flexible — morning delivery is fine.", ins:"B2B time sensitivity: restaurants 2hr window, offices AM delivery", mood:'warm' },
+              { t:"Do you have a lot of returns from these customers too?", q:'ok', why:"Relevant — but mid-conversation it can feel like jumping ahead. Better to exhaust this topic first.", r:"Some, yeah. But the real issue is speed of forward delivery right now.", mood:'neutral' },
+              { t:"We could offer a two-hour window service as a premium tier.", q:'weak', why:"Proposing a solution before fully understanding constraints misses the chance to learn their priorities.", r:"I'd need to know what that costs before I can say anything.", mood:'neutral' }
+            ]
+          },
+          { q:"Do you handle returns as well? That's actually becoming a nightmare for us.",
+            choices:[
+              { t:"Walk me through your returns process — where does it break down most?", q:'good', why:"Process walkthroughs reveal hidden pain. Retailers normalise inefficiencies — narrating exposes them.", r:"Customers drop returns at our store but we need courier pickup. Nobody offers affordable scheduled pickup.", ins:"Returns pickup is an unmet need; currently batching = delays", mood:'warm' },
+              { t:"Would you bundle deliveries and returns in one contract?", q:'ok', why:"Valid pricing probe, but asking before understanding the pain leads to weak yes answers.", r:"Yes — one vendor for both would be ideal. Simpler invoicing.", ins:"Preference for bundled delivery + returns contract", mood:'warm' },
+              { t:"Returns are complex — let's focus on delivery for now.", q:'weak', why:"When a customer raises an unsolicited pain point, dismissing it is a major miss.", r:"But returns are nearly half our logistics cost. It's really important to us.", mood:'cold' }
+            ]
+          },
+          { q:"What would the onboarding process look like if we worked together?",
+            choices:[
+              { t:"Before I answer that — what would make switching easy or hard for you?", q:'good', why:"Flipping the question back shows you're in discovery mode, not pitch mode. Their switching barriers are more valuable than any onboarding script.", r:"Main barrier is retraining staff, and our current courier is on a 3-month rolling contract.", ins:"Switching barriers: staff retraining + 3-month notice period", mood:'warm' },
+              { t:"We'd handle everything — integration takes about a week.", q:'ok', why:"A reasonable answer, but you've moved into pitch mode.", r:"That sounds manageable. What integrations do you support?", mood:'neutral' },
+              { t:"That depends on your volume and location — it varies.", q:'weak', why:"Vague answers feel evasive to a busy retailer.", r:"I'd need more specifics before committing to anything.", mood:'cold' }
+            ]
+          }
+        ]
+      },
+      { id:'city', emoji:'🏛️', name:'City Official', role:'Regulator', coming:false,
+        mood:'neutral',
+        open:"We're interested in sustainable logistics, but any new operator needs to comply with several city ordinances. What did you want to find out?",
+        turns:[
+          { q:"The regulatory landscape here is more complex than most startups expect.",
+            choices:[
+              { t:"Could you walk me through the key permits and requirements we'd need?", q:'good', why:"Asking a regulator to walk you through requirements signals respect for their expertise — and ensures you don't miss anything.", r:"You'd need a logistics operator licence, low-emission zone certification, and to enrol in our city data-sharing programme.", ins:"3 key permits: operator licence, LEZ cert, data sharing", mood:'warm' },
+              { t:"Are there any operating hour restrictions in the city centre?", q:'ok', why:"A useful specific question — but narrow. You might miss other constraints.", r:"Cargo bikes in the centre must operate between 7am and 10pm.", ins:"Operating hours: 7am–10pm in city centre", mood:'neutral' },
+              { t:"We're planning to be fully compliant — you don't need to worry.", q:'weak', why:"Telling a regulator not to worry is dismissive and overconfident. It's a red flag.", r:"That's quite an assumption without knowing our requirements.", mood:'cold' }
+            ]
+          },
+          { q:"We're attentive to how new logistics operators affect cycling infrastructure. Cargo bikes are popular but can create conflict.",
+            choices:[
+              { t:"What types of conflicts have you seen, and how have other operators addressed them?", q:'good', why:"Asking about past cases shows you're trying to learn from the ecosystem. Regulators appreciate this.", r:"Mainly pavement incursions and double-parking near shops. The best operators have dedicated loading bays and route compliance reports.", ins:"Key compliance issue: loading bays + route reporting required", mood:'warm' },
+              { t:"Is there a code of conduct for cargo bike operators?", q:'ok', why:"Direct and factual — you'll get a simple answer without much nuance.", r:"There's a draft framework — not legally binding yet. I can send it.", ins:"Draft operator code of conduct exists (not yet binding)", mood:'neutral' },
+              { t:"We'll follow all the rules, of course.", q:'weak', why:"Generic reassurances don't give regulators useful information. They've heard it before.", r:"I'm sure you intend to. The question is whether you understand what those rules involve.", mood:'cold' }
+            ]
+          },
+          { q:"The city is launching a pilot programme for sustainable urban logistics next quarter.",
+            choices:[
+              { t:"What criteria do companies need to meet to be considered for the pilot?", q:'good', why:"Pilots are a major opportunity. Getting the exact criteria lets you evaluate fit — and maybe shape your MVP to qualify.", r:"Fleet size of 10+, real-time GPS reporting, and a 6-month trial commitment with quarterly data reports.", ins:"Pilot: 10+ fleet, GPS reporting, 6-month trial + quarterly reports", mood:'warm' },
+              { t:"Who else has applied for the pilot?", q:'ok', why:"Useful competitive intelligence — but officials often can't share this.", r:"I can't share applicant details, but it's competitive. Apply early.", mood:'neutral' },
+              { t:"We'd love to join — can you put us down as interested?", q:'weak', why:"Skipping process steps with a regulator creates a bad first impression.", r:"There's a formal application process. I'd strongly recommend reading it first.", mood:'cold' }
+            ]
+          },
+          { q:"Is there anything from the city's side that would be a dealbreaker for a startup like yours?",
+            choices:[
+              { t:"What are the most common reasons new logistics operators fail to get approval?", q:'good', why:"Asking about failure modes is a power move. You get critical constraints as a coherent list.", r:"Insufficient insurance, lack of data transparency, and underestimating LEZ requirements. Those three catch almost everyone.", ins:"Top 3 approval failures: insurance, data transparency, LEZ underestimation", mood:'warm' },
+              { t:"Are there any financial grants for sustainable mobility startups?", q:'ok', why:"Good adjacent question — not critical right now, but worth gathering.", r:"Two EU-funded schemes open until December. Check the city business portal.", ins:"EU grant schemes available until December via city portal", mood:'neutral' },
+              { t:"I think we've covered everything, thanks.", q:'weak', why:"Closing when the official just offered to flag dealbreakers is a massive missed opportunity.", r:"You might want to reconsider — I was about to flag some important constraints.", mood:'cold' }
+            ]
+          }
+        ]
+      },
+      { id:'investor', emoji:'💼', name:'Angel Investor', role:'Investor', coming:true, mood:'cold', open:'', turns:[] },
+      { id:'driver',   emoji:'🚲', name:'Cargo Pilot',    role:'Operations', coming:true, mood:'neutral', open:'', turns:[] }
+    ]
+  },
+  {
+    id:'medi', icon:'💊', name:'MediBuddy', tag:'Remote Medication Reminders',
+    desc:'A companion device reminding elderly users to take medications and alerting family if doses are missed. Validate need and understand barriers.',
+    goal:7,
+    npcs:[
+      { id:'elderly', emoji:'👴', name:'Elderly User', role:'End User (70)', coming:false,
+        mood:'warm',
+        open:"My daughter set up this call. I do miss my tablets sometimes — mostly because I forget which ones I've already taken.",
+        turns:[
+          { q:"I have five different medications and they all have different times. It gets confusing.",
+            choices:[
+              { t:"Can you walk me through what a typical morning looks like when you take your medications?", q:'good', why:"Process walkthroughs reveal friction users can't articulate. When people describe their routine, hidden pain points emerge naturally.", r:"I get up, make tea, then try to remember — did I take the blood pressure one? Sometimes I take it twice by accident. My wife used to remind me.", ins:"Confusion leads to double-dosing; relied on partner memory", mood:'warm' },
+              { t:"Do you use any system currently to track your medications?", q:'ok', why:"Direct and relevant. Gets a factual answer but doesn't surface emotional or contextual depth.", r:"I have a paper chart but I forget to tick it off. It's by the kettle.", ins:"Paper chart exists but isn't reliably used", mood:'warm' },
+              { t:"Would a digital reminder app help you?", q:'weak', why:"Proposing a solution this early skips understanding the real problem.", r:"I don't really know how to use apps. My phone is just for calls.", mood:'neutral' }
+            ]
+          },
+          { q:"I don't like things that are too complicated. I had a smartwatch once and I couldn't figure it out.",
+            choices:[
+              { t:"What made the smartwatch hard to use? What specifically confused you?", q:'good', why:"Specific failure post-mortems are a designer's best friend. The answer tells you exactly what NOT to build.", r:"Too many buttons, tiny text, and it kept asking me to update. I just want one button that does the job.", ins:"Key UX: single-button simplicity, large text, no updates", mood:'warm' },
+              { t:"What devices do you currently use and feel comfortable with?", q:'good', why:"Understanding existing comfort zones shapes product design — build on what already works.", r:"The landline, the microwave, and the TV remote. Simple things with clear buttons.", ins:"Familiar devices: landline, microwave, TV remote — all tactile+simple", mood:'warm' },
+              { t:"Our device is very simple — just one button.", q:'weak', why:"Pitching a feature before fully understanding the need misses other barriers you haven't thought of.", r:"You say that, but the smartwatch was also supposed to be simple.", mood:'cold' }
+            ]
+          },
+          { q:"I live alone now so there's no one to check if I've taken them.",
+            choices:[
+              { t:"How does that feel — having no one at home to check on you?", q:'good', why:"Emotional context reveals the real 'job to be done'. Loneliness and safety fears may matter as much as the medication itself.", r:"It's honestly a bit worrying. My daughter calls twice a week but I don't want to be a burden.", ins:"Emotional driver: fear of being a burden + desire for independence", mood:'warm' },
+              { t:"Does your family worry about the medication situation?", q:'ok', why:"Useful for understanding the family side — but following the emotional thread here yields richer insight.", r:"My daughter does, yes. She's mentioned getting something to help.", ins:"Family already seeking solution — daughter is decision influencer", mood:'warm' },
+              { t:"We can alert your family automatically if you miss a dose.", q:'weak', why:"Introducing a feature interrupts a moment of emotional honesty. Pivoting to pitch breaks that trust.", r:"I'm not sure I want to worry her every time I'm a bit late.", mood:'neutral' }
+            ]
+          },
+          { q:"Would this thing need the internet? My connection is unreliable.",
+            choices:[
+              { t:"What's your internet situation — is it WiFi, mobile data, or something else?", q:'good', why:"Connectivity is a real technical constraint for this segment. Understanding it precisely informs whether you need an offline mode.", r:"I have broadband but it goes down a lot. My neighbour has the same problem — it's the building.", ins:"Connectivity unreliable; building-level issue — offline mode needed", mood:'warm' },
+              { t:"How important is it that it works without internet?", q:'ok', why:"Framing as importance gives you a preference score rather than a real constraint.", r:"Very important. If it relies on the internet it'll let me down at the worst time.", ins:"Must function offline — internet failure is a dealbreaker", mood:'warm' },
+              { t:"Most modern devices need internet — it's usually fine.", q:'weak', why:"Dismissing a stated concern as 'usually fine' is tone-deaf in user research.", r:"Well, not for me it isn't. I've had issues for months.", mood:'cold' }
+            ]
+          }
+        ]
+      },
+      { id:'gp', emoji:'🩺', name:'GP / Doctor', role:'Healthcare Professional', coming:false,
+        mood:'neutral',
+        open:"I have about 15 minutes. I do see non-adherence a lot in elderly patients — it's a real clinical issue.",
+        turns:[
+          { q:"Medication non-adherence contributes to a surprising number of emergency admissions.",
+            choices:[
+              { t:"What are the most common reasons your elderly patients give for missing doses?", q:'good', why:"Clinicians see patterns across many patients — their perspective is more representative than any single user interview.", r:"Forgetting is number one. Then confusion about which tablets. Then side effects. Rarely cost.", ins:"Top non-adherence causes: forgetting, confusion, side effects (not cost)", mood:'warm' },
+              { t:"Would you recommend a reminder device to your patients?", q:'ok', why:"Tests intent, but too early. Understand the problem space before asking about your solution.", r:"Potentially — it would depend heavily on simplicity and reliability.", mood:'neutral' },
+              { t:"We've built a reminder device — could you prescribe it?", q:'weak', why:"Asking a GP to prescribe something without clinical evidence damages your credibility instantly.", r:"We can't recommend unvalidated devices. There's a proper regulatory pathway.", mood:'cold' }
+            ]
+          },
+          { q:"I do sometimes hesitate to prescribe complex regimens to patients who live alone.",
+            choices:[
+              { t:"What information would you want about a patient's home situation before designing their medication schedule?", q:'good', why:"This surfaces the data a GP needs — which is exactly the kind of data your device could provide.", r:"Whether they live alone, their digital literacy, any cognitive decline, and whether they have a carer nearby.", ins:"GP data needs: living situation, digital literacy, cognitive status, carer presence", mood:'warm' },
+              { t:"How do you currently follow up on adherence between appointments?", q:'good', why:"Understanding the current system reveals gaps your product could fill without requiring a full behaviour change.", r:"We don't, really — we rely on patient reporting. Far from perfect. Some won't admit they've been missing doses.", ins:"No adherence monitoring between appointments — reporting gap", mood:'warm' },
+              { t:"Is there a market for this kind of device in your practice?", q:'weak', why:"'Is there a market' is a founder question, not a discovery question. GPs don't think in market terms.", r:"I'm not really the right person to ask about markets. I can tell you about clinical need.", mood:'cold' }
+            ]
+          },
+          { q:"There are also some regulatory considerations for anything that interfaces with clinical data.",
+            choices:[
+              { t:"What regulatory framework would this fall under, and who should we engage early?", q:'good', why:"Getting the regulatory pathway from an insider early saves months of expensive mistakes.", r:"If it's alerting on clinical events, it could be Class I or IIa medical device regulation. Speak to the MHRA early and consider GDPR for any health data.", ins:"Regulatory: potential Class I/IIa med device; MHRA + GDPR engagement needed", mood:'warm' },
+              { t:"Is patient data sharing a concern we should think about?", q:'ok', why:"Relevant, but 'should we think about' undersells the urgency.", r:"It's not optional — GDPR is strict for health data. Explicit consent and data minimisation built in from day one.", ins:"GDPR for health data: explicit consent + data minimisation required", mood:'warm' },
+              { t:"We'd just store anonymised data, so GDPR shouldn't be an issue.", q:'weak', why:"Telling a healthcare professional you've solved a complex regulatory question shows naivety.", r:"That's a common misconception. Speak to a GDPR specialist before building.", mood:'cold' }
+            ]
+          },
+          { q:"What would it take for me to actually recommend this to a patient with confidence?",
+            choices:[
+              { t:"What evidence or certification would you personally need to feel comfortable recommending it?", q:'good', why:"This tells you your minimum viable credibility threshold for GP endorsement.", r:"A pilot with measurable outcomes, CE marking, clear data handling documentation, and ideally a peer-reviewed study.", ins:"GP endorsement requires: pilot outcomes, CE mark, data docs, peer review", mood:'warm' },
+              { t:"Would a trial with 20 patients in your practice help?", q:'ok', why:"Sensible next step — but asking what evidence they need first would give a richer brief for designing the pilot.", r:"Possibly — it would depend on ethics approval and data governance.", mood:'neutral' },
+              { t:"Lots of GPs are already using similar tools.", q:'weak', why:"Social proof without specifics sounds like a bluff to a clinical professional.", r:"Which tools specifically? I haven't seen any in use in this area.", mood:'cold' }
+            ]
+          }
+        ]
+      },
+      { id:'family', emoji:'👩', name:'Adult Daughter', role:'Family Decision-Maker', coming:false,
+        mood:'neutral',
+        open:"I'm the one who'd probably end up buying this for my dad. He lives alone and it worries me a lot.",
+        turns:[
+          { q:"I check in twice a week but I genuinely don't know if he's taking his medication properly.",
+            choices:[
+              { t:"What would give you peace of mind — what information would actually help?", q:'good', why:"Family members are often the real economic buyers. Understanding what peace of mind looks like shapes your value proposition.", r:"Just knowing he's taken his tablets that day. Not a detailed report — just a green tick on my phone.", ins:"Family buyer need: simple daily confirmation, not detailed data", mood:'warm' },
+              { t:"How often do you worry about it?", q:'ok', why:"Gauges emotional intensity, which informs urgency. But the 'what would help' question is more actionable.", r:"Every day honestly. Especially after he mentioned he'd double-dosed once.", mood:'warm' },
+              { t:"Would you buy a device to solve this?", q:'weak', why:"Asking for purchase intent before understanding the problem produces unreliable answers.", r:"I mean… maybe? I don't know what it does yet.", mood:'neutral' }
+            ]
+          },
+          { q:"I tried to get him a smartwatch last Christmas but he returned it. He found it too complicated.",
+            choices:[
+              { t:"What happened specifically — what made him give up on it?", q:'good', why:"Post-mortems on failed previous solutions are incredibly rich. The failure reasons tell you your exact design constraints.", r:"Too many notifications, the screen was too small, and it needed charging every day. The daily charging especially annoyed him.", ins:"Prior device failure: notification overload, small screen, daily charging too demanding", mood:'warm' },
+              { t:"How tech-savvy is he in general?", q:'ok', why:"Good baseline. But you already know he struggles — probe deeper on specific barriers.", r:"He can use his phone for calls and that's about it. No interest in learning new things.", mood:'warm' },
+              { t:"Our device is much simpler than a smartwatch.", q:'weak', why:"Comparative claims without evidence feel like sales talk.", r:"That's what they said about the watch too.", mood:'cold' }
+            ]
+          },
+          { q:"I'd also want to make sure it doesn't make him feel like he's being watched or patronised.",
+            choices:[
+              { t:"That's really important — how does he generally respond to receiving help or assistance?", q:'good', why:"Dignity and autonomy are powerful emotional drivers. Probing this shapes your entire UX philosophy.", r:"He's proud and independent. He'd hate anything that feels like surveillance. It needs to feel like a tool he controls, not something monitoring him.", ins:"Critical UX: must feel like user tool, not surveillance device", mood:'warm' },
+              { t:"How would you frame it to him — as a helpful tool vs monitoring?", q:'ok', why:"Surfaces how the family thinks about the pitch. Useful for marketing.", r:"I'd say it's a personal assistant, not a tracker. He likes being self-sufficient.", mood:'warm' },
+              { t:"We frame it as an independence tool, not a monitoring one.", q:'weak', why:"Correcting the customer's framing closes down the exploration.", r:"Right, but that only works if it actually feels that way when he uses it.", mood:'neutral' }
+            ]
+          },
+          { q:"What would the setup process look like? He can't do it himself and I can't always be there.",
+            choices:[
+              { t:"What are your constraints around setup — when are you available, and is there anyone locally who could help?", q:'good', why:"Understanding setup constraints lets you design the right onboarding. Remote setup? Carer network? This question unlocks all of that.", r:"I'm two hours away. He has a care visitor twice a week — maybe they could help if it's simple enough. Under 10 minutes ideally.", ins:"Setup: remote family, carer visits 2x/week, must complete in <10min", mood:'warm' },
+              { t:"Would you prefer a professional installation service?", q:'ok', why:"Tests one solution — fine, but doesn't reveal the full constraint landscape.", r:"That might work, but I'd want to know the cost. I'm not sure he'd let a stranger in easily.", mood:'neutral' },
+              { t:"Setup takes about 10 minutes — very straightforward.", q:'weak', why:"Providing specs before understanding what 'straightforward' means to this customer misses the mark.", r:"That still needs someone physically there. That's the whole problem.", mood:'cold' }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let G = { scenarioId:null, insights:[], meetings:0, goodChoices:0, totalChoices:0, interviewedIds:[], hintsOn:false };
+let curNPC = null, turnIdx = 0, mtgGood = 0, mtgTotal = 0;
+const history = [];
+
+function sc() { return SCENARIOS.find(s => s.id === G.scenarioId); }
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(id) {
+  const from = document.querySelector('.panel.active');
+  const to   = document.getElementById(id);
+  if (!to || from === to) return;
+  history.push(from.id);
+  from.classList.remove('active'); from.classList.add('hidden-left');
+  to.classList.remove('hidden-right','hidden-left'); to.classList.add('active');
+  to.querySelectorAll('.panel-body').forEach(b => b.scrollTop = 0);
+}
+function goBack() {
+  if (!history.length) return;
+  const prevId = history.pop();
+  const cur  = document.querySelector('.panel.active');
+  const prev = document.getElementById(prevId);
+  if (!prev) return;
+  cur.classList.remove('active'); cur.classList.add('hidden-right');
+  prev.classList.remove('hidden-left'); prev.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════
+//  SCENARIO MAP
+// ═══════════════════════════════════════════════
+function buildMap() {
+  const list = document.getElementById('sc-list');
+  list.innerHTML = '';
+  let totalInsights = G.insights.length;
+  document.getElementById('map-insight-badge').textContent = totalInsights + ' insight' + (totalInsights===1?'':'s');
+
+  SCENARIOS.forEach((s, i) => {
+    const doneInterviews = G.interviewedIds.filter(id => s.npcs.some(n => n.id === id));
+    const isDone = doneInterviews.length >= s.npcs.filter(n=>!n.coming).length;
+    const locked = i > 0 && !SCENARIOS[i-1].npcs.some(n => G.interviewedIds.includes(n.id));
+
+    const card = document.createElement('div');
+    card.className = 'sc-card' + (locked ? ' locked' : '') + (isDone ? ' done' : '');
+    card.innerHTML = `
+      <div class="sc-emoji">${s.icon}</div>
+      <div class="sc-body">
+        <div class="sc-name">${s.name}</div>
+        <div class="sc-desc">${s.tag}</div>
+      </div>
+      <div class="sc-tag ${locked?'locked':isDone?'done':'open'}">${locked?'🔒 Soon':isDone?'✓ Done':'▶ Play'}</div>
+    `;
+    if (!locked) card.onclick = () => { G.scenarioId = s.id; buildChoose(); goTo('p-choose'); };
+    list.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  STAKEHOLDER CHOOSE
+// ═══════════════════════════════════════════════
+function buildChoose() {
+  const s = sc();
+  document.getElementById('choose-title').textContent = s.name;
+  const scIns = G.insights.filter(i => s.npcs.some(n=>n.id===i.from)).length;
+  document.getElementById('choose-badge').textContent = `${scIns}/${s.goal} insights`;
+
+  document.getElementById('sc-brief').innerHTML = `
+    <div class="brief-title">${s.icon} ${s.name} — ${s.tag}</div>
+    <div class="brief-text">${s.desc}</div>
+    <div class="brief-goal">🎯 Goal: collect as many insights as possible</div>
+  `;
+
+  updateProgress();
+
+  const grid = document.getElementById('npc-grid');
+  grid.innerHTML = '';
+  s.npcs.forEach(n => {
+    const done = G.interviewedIds.includes(n.id);
+    const card = document.createElement('div');
+    card.className = 'npc-card' + (n.coming ? ' locked' : done ? ' done' : '');
+    card.innerHTML = `
+      ${done ? '<div class="npc-tag done">✓ Done</div>' : n.coming ? '<div class="npc-tag locked">Soon</div>' : ''}
+      <div class="npc-emoji">${n.emoji}</div>
+      <div class="npc-name">${n.name}</div>
+      <div class="npc-role">${n.role}</div>
+      ${n.coming ? '<div class="npc-coming">Coming soon</div>' : ''}
+    `;
+    if (!n.coming) {
+      card.onclick = () => { startDialogue(n.id); goTo('p-dialogue'); };
+      if (done) card.title = 'Replay interview';
+    }
+    grid.appendChild(card);
+  });
+}
+
+function updateProgress() {
+  const s = sc(); if (!s) return;
+  const scIns = G.insights.filter(i => s.npcs.some(n=>n.id===i.from)).length;
+  const pct = Math.min(100, Math.round(scIns / s.goal * 100));
+  document.getElementById('pbar-fill').style.width = pct + '%';
+  document.getElementById('pbar-pct').textContent = pct + '%';
+  document.getElementById('choose-badge').textContent = `${scIns}/${s.goal} insights`;
+  document.getElementById('map-insight-badge').textContent = G.insights.length + ' insight' + (G.insights.length===1?'':'s');
+}
+
+// ═══════════════════════════════════════════════
+//  DIALOGUE
+// ═══════════════════════════════════════════════
+function startDialogue(id) {
+  const s = sc();
+  curNPC = s.npcs.find(n => n.id === id);
+  turnIdx = 0; mtgGood = 0; mtgTotal = 0; G.hintsOn = false;
+
+  document.getElementById('npc-av').textContent = curNPC.emoji;
+  document.getElementById('npc-nm').textContent = curNPC.name;
+  document.getElementById('npc-rl').textContent = curNPC.role;
+  document.getElementById('hint-btn').textContent = '💡 Show hints';
+  document.getElementById('choices-list').className = 'choices-list';
+  setMood(curNPC.mood);
+  buildPips();
+
+  const chat = document.getElementById('chat');
+  chat.innerHTML = '';
+  addBub('npc', curNPC.name, curNPC.open);
+  renderTurn();
+}
+
+function buildPips() {
+  const row = document.getElementById('pip-row');
+  row.innerHTML = '';
+  curNPC.turns.forEach((_, i) => {
+    const p = document.createElement('div');
+    p.className = 'turn-pip' + (i===0?' active':'');
+    p.id = 'pip-' + i;
+    row.appendChild(p);
+  });
+  const lbl = document.createElement('div');
+  lbl.className = 'turn-label';
+  lbl.id = 'pip-label';
+  lbl.textContent = `Turn 1 / ${curNPC.turns.length}`;
+  row.appendChild(lbl);
+}
+
+function updatePips() {
+  curNPC.turns.forEach((_, i) => {
+    const p = document.getElementById('pip-' + i);
+    if (!p) return;
+    p.className = 'turn-pip' + (i < turnIdx ? ' done' : i === turnIdx ? ' active' : '');
+  });
+  const lbl = document.getElementById('pip-label');
+  if (lbl) lbl.textContent = `Turn ${Math.min(turnIdx+1, curNPC.turns.length)} / ${curNPC.turns.length}`;
+}
+
+function setMood(mood) {
+  const p = document.getElementById('mood-pill');
+  p.className = 'mood-pill ' + mood;
+  p.textContent = mood==='warm'?'😊 Warm':mood==='cold'?'😐 Guarded':'🤝 Neutral';
+}
+
+function addBub(type, sender, text) {
+  const chat = document.getElementById('chat');
+  const b = document.createElement('div');
+  if (type === 'reflect') {
+    b.className = 'bub bub-reflect';
+    b.innerHTML = `<span class="ri">💭</span><span><strong>Reflection:</strong> ${text}</span>`;
+  } else {
+    b.className = `bub bub-${type}`;
+    b.innerHTML = `<div class="bub-sender">${sender}</div>${text}`;
+  }
+  chat.appendChild(b);
+  requestAnimationFrame(() => chat.scrollTop = chat.scrollHeight);
+}
+
+function renderTurn() {
+  const cl = document.getElementById('choices-list');
+  cl.innerHTML = '';
+  cl.className = 'choices-list' + (G.hintsOn ? ' hints-on' : '');
+
+  if (turnIdx >= curNPC.turns.length) { endMeeting(); return; }
+
+  const turn = curNPC.turns[turnIdx];
+  // Show NPC question as chat bubble
+  addBub('npc', curNPC.name, turn.q);
+  updatePips();
+
+  turn.choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'c-btn';
+    btn.innerHTML = `<span class="c-arrow">→</span><div class="c-text">${ch.t}<div class="c-hint ${ch.q}">${ch.q==='good'?'✅ Strong question':ch.q==='ok'?'🟡 Decent — could go deeper':'⚠️ May close the conversation'}</div></div>`;
+    btn.onclick = () => pickChoice(ch);
+    cl.appendChild(btn);
+  });
+}
+
+function pickChoice(ch) {
+  document.querySelectorAll('.c-btn').forEach(b => b.disabled = true);
+  addBub('player', 'You', ch.t);
+  mtgTotal++; G.totalChoices++;
+  if (ch.q === 'good') { mtgGood++; G.goodChoices++; }
+
+  setTimeout(() => {
+    addBub('npc', curNPC.name, ch.r);
+    if (ch.mood) setMood(ch.mood);
+    if (ch.ins) {
+      // Remove duplicate insight from same stakeholder if replaying
+      G.insights = G.insights.filter(i => !(i.from === curNPC.id && i.label === ch.ins));
+      G.insights.push({ label:ch.ins, from:curNPC.id, quality:ch.q });
+      toast('💡 New insight collected!');
+    }
+    setTimeout(() => {
+      addBub('reflect', '', ch.why);
+      turnIdx++;
+      if (turnIdx < curNPC.turns.length) {
+        setTimeout(() => renderTurn(), 650);
+      } else {
+        setTimeout(() => endMeeting(), 700);
+      }
+    }, 500);
+  }, 450);
+}
+
+function toggleHints() {
+  G.hintsOn = !G.hintsOn;
+  document.getElementById('choices-list').className = 'choices-list' + (G.hintsOn ? ' hints-on' : '');
+  document.getElementById('hint-btn').textContent = G.hintsOn ? '🙈 Hide hints' : '💡 Show hints';
+}
+
+function endMeeting() {
+  if (!G.interviewedIds.includes(curNPC.id)) G.interviewedIds.push(curNPC.id);
+  G.meetings++;
+  updateProgress();
+
+  const cl = document.getElementById('choices-list');
+  cl.innerHTML = '';
+  const endBtn = document.createElement('button');
+  endBtn.className = 'btn btn-primary btn-full';
+  endBtn.textContent = '📋 See Meeting Feedback →';
+  endBtn.onclick = () => { showFeedback(); goTo('p-feedback'); };
+  cl.appendChild(endBtn);
+  addBub('npc', curNPC.name, "It was great speaking with you. Good luck with the research!");
+}
+
+// ═══════════════════════════════════════════════
+//  FEEDBACK
+// ═══════════════════════════════════════════════
+function showFeedback() {
+  const score = mtgTotal > 0 ? Math.round(mtgGood / mtgTotal * 100) : 0;
+  const ring  = score >= 67 ? 'good' : score >= 34 ? 'ok' : 'bad';
+  const title = score >= 67 ? 'Excellent Interview!' : score >= 34 ? 'Solid Effort' : 'Room to Improve';
+  const sub   = score >= 67 ? 'You asked open questions and followed the customer\'s lead.' : score >= 34 ? 'Some good questions — but there were missed opportunities to probe deeper.' : 'Assumptions and early pitching closed the conversation down.';
+  const thought = score >= 67
+    ? `<strong>Great approach:</strong> You led with open questions, explored what the customer valued before proposing anything, and dug into specifics when they arose.`
+    : score >= 34
+    ? `<strong>Decent approach, with gaps:</strong> You gathered useful data but often settled for the first answer. Try follow-ups like <em>"Can you say more about that?"</em> or <em>"Why does that matter to you?"</em>`
+    : `<strong>Common pitfall:</strong> Pitching or assuming early signals you're not really listening. In customer discovery, your job is to listen — not convince. Try reflecting what the customer said before asking your next question.`;
+
+  const newIns = G.insights.filter(i => i.from === curNPC.id);
+  const insHTML = newIns.length
+    ? newIns.map(i=>`<div class="insight-row"><span class="iq">${i.quality==='good'?'🟢':i.quality==='ok'?'🟡':'🔴'}</span><div><strong>${i.label}</strong><span>${i.quality==='good'?'Strong find':i.quality==='ok'?'Partial find':'Weak find'} · from ${curNPC.name}</span></div></div>`).join('')
+    : '<p style="color:var(--muted);font-size:.8rem;padding:.3rem 0">No insights collected — try more open questions next time.</p>';
+
+  const missed = curNPC.turns.map((turn, idx) => {
+    const best = turn.choices.find(c=>c.q==='good');
+    const got  = G.insights.some(i => i.from===curNPC.id && i.label===best?.ins);
+    if (!got && best?.ins) return `<li>Turn ${idx+1}: <em>"${best.t}"</em> → would have revealed: <strong>${best.ins}</strong></li>`;
+    return null;
+  }).filter(Boolean);
+
+  const al = Math.min(95, 40 + mtgGood*18);
+  const qq = Math.min(90, 35 + mtgGood*15);
+  const em = Math.min(88, 30 + (curNPC.mood==='warm'?40:15));
+  const ad = Math.min(90, 30 + G.meetings*14);
+
+  document.getElementById('fb-body').innerHTML = `
+    <div class="fb-hero">
+      <div class="score-ring ${ring}">${score}%</div>
+      <div class="fb-title">${title}</div>
+      <div class="fb-sub">${sub}</div>
+    </div>
+    <div class="fb-section">
+      <div class="fb-section-label">💭 Understanding Your Approach</div>
+      <div class="thought-card">${thought}</div>
+    </div>
+    <div class="fb-section">
+      <div class="fb-section-label">Insights Collected</div>
+      ${insHTML}
+    </div>
+    ${missed.length ? `<div class="fb-section"><div class="missed-card"><h4>⚠️ Missed Opportunities</h4><ul>${missed.join('')}</ul></div></div>` : `<div class="fb-section"><div style="background:rgba(61,255,160,.06);border:1px solid rgba(61,255,160,.18);border-radius:10px;padding:.75rem 1rem;font-size:.8rem;color:var(--green);">✅ You captured all the key insights in this meeting.</div></div>`}
+    <div class="fb-section">
+      <div class="fb-section-label">Skill Tracker</div>
+      ${[['Active Listening','s1',al],['Questioning Quality','s2',qq],['Empathy & Rapport','s3',em],['Adaptability','s4',ad]].map(([nm,cls,v])=>`<div class="skill-row"><span class="skill-nm">${nm}</span><div class="sbar"><div class="sbar-fill ${cls}" style="width:0%" data-w="${v}"></div></div><span class="skill-val">${v}%</span></div>`).join('')}
+    </div>
+  `;
+  setTimeout(() => {
+    document.querySelectorAll('.sbar-fill[data-w]').forEach(el => el.style.width = el.dataset.w + '%');
+  }, 250);
+}
+
+// ═══════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════
+function goToResults() {
+  const s = sc();
+  const scIns = s ? G.insights.filter(i => s.npcs.some(n=>n.id===i.from)) : G.insights;
+  const pct   = G.totalChoices > 0 ? Math.round(G.goodChoices / G.totalChoices * 100) : 0;
+  const done  = s && scIns.length >= s.goal;
+
+  document.getElementById('results-body').innerHTML = `
+    <div class="results-hero">
+      <div class="results-trophy">${done?'🏆':'📋'}</div>
+      <div class="results-title">${done?'Mission <em>Complete!</em>':'Scenario <em>Summary</em>'}</div>
+      <div class="results-sub">${done?'You gathered enough insights to move forward — great research!':'You gathered '+scIns.length+(s?' of '+s.goal:'')+' key insights. Keep interviewing to find more.'}</div>
+    </div>
+    <div class="results-stats">
+      <div class="rstat"><div class="rv">${scIns.length}</div><div class="rl">Insights</div></div>
+      <div class="rstat"><div class="rv">${pct}%</div><div class="rl">Quality</div></div>
+      <div class="rstat"><div class="rv">${G.meetings}</div><div class="rl">Meetings</div></div>
+    </div>
+    <div style="padding:.9rem 1.1rem;border-bottom:1px solid var(--border);">
+      <div class="fb-section-label" style="margin-bottom:.5rem;">What you practised</div>
+      <ul style="font-size:.8rem;color:var(--muted);padding-left:1rem;line-height:1.7;">
+        <li>Asking open questions reveals more than assumptions</li>
+        <li>Different stakeholders surface different needs</li>
+        <li>Trust-building improves information quality</li>
+        <li>Failed meetings still teach what <em>not</em> to do</li>
+      </ul>
+    </div>
+    <div class="results-btns">
+      ${s && !done ? `<button class="btn btn-secondary btn-full" onclick="goBack()">← Keep Interviewing</button>` : ''}
+      <button class="btn btn-primary btn-full" onclick="switchScenario()">Try Next Scenario →</button>
+      <button class="btn btn-secondary btn-full" onclick="resetAll()">↩ Main Menu</button>
+    </div>
+  `;
+  goTo('p-results');
+}
+
+function switchScenario() {
+  const cur = SCENARIOS.findIndex(s => s.id === G.scenarioId);
+  const next = SCENARIOS[cur+1];
+  if (next) { G.scenarioId = next.id; buildChoose(); goTo('p-choose'); }
+  else { buildMap(); goTo('p-map'); }
+}
+
+function resetAll() {
+  G = { scenarioId:null, insights:[], meetings:0, goodChoices:0, totalChoices:0, interviewedIds:[], hintsOn:false };
+  history.length = 0;
+  // Reset all panels
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.remove('active','hidden-left','hidden-right');
+    p.classList.add('hidden-right');
+  });
+  document.getElementById('p-home').classList.remove('hidden-right');
+  document.getElementById('p-home').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+// Wire up home buttons to buildMap
+document.querySelector('#p-home .btn-primary').onclick = () => { buildMap(); goTo('p-map'); };
+</script>
 </body>
 </html>
